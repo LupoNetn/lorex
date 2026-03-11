@@ -5,56 +5,53 @@
 package sqlc
 
 import (
-	"database/sql"
-	"time"
-
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Company struct {
-	ID                 uuid.UUID      `json:"id"`
-	Name               string         `json:"name"`
-	Description        sql.NullString `json:"description"`
-	Logo               sql.NullString `json:"logo"`
-	Industry           string         `json:"industry"`
-	Phone              string         `json:"phone"`
-	Email              string         `json:"email"`
-	Location           string         `json:"location"`
-	Password           string         `json:"password"`
-	Plan               interface{}    `json:"plan"`
-	CustomerSignupCode string         `json:"customer_signup_code"`
-	CreatedAt          sql.NullTime   `json:"created_at"`
-	UpdatedAt          sql.NullTime   `json:"updated_at"`
+	ID                 pgtype.UUID        `json:"id"`
+	Name               string             `json:"name"`
+	Description        pgtype.Text        `json:"description"`
+	Logo               pgtype.Text        `json:"logo"`
+	Industry           string             `json:"industry"`
+	Phone              string             `json:"phone"`
+	Email              string             `json:"email"`
+	Location           string             `json:"location"`
+	Password           string             `json:"password"`
+	Plan               interface{}        `json:"plan"`
+	CustomerSignupCode string             `json:"customer_signup_code"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Customer struct {
-	ID               uuid.UUID     `json:"id"`
-	CompanyID        uuid.NullUUID `json:"company_id"`
-	Name             string        `json:"name"`
-	Email            string        `json:"email"`
-	Phone            string        `json:"phone"`
-	Password         string        `json:"password"`
-	Dob              time.Time     `json:"dob"`
-	Gender           string        `json:"gender"`
-	StateResidence   string        `json:"state_residence"`
-	CountryResidence string        `json:"country_residence"`
-	Nationality      string        `json:"nationality"`
-	CreatedAt        sql.NullTime  `json:"created_at"`
-	UpdatedAt        sql.NullTime  `json:"updated_at"`
+	ID               pgtype.UUID        `json:"id"`
+	CompanyID        pgtype.UUID        `json:"company_id"`
+	Name             string             `json:"name"`
+	Email            string             `json:"email"`
+	Phone            string             `json:"phone"`
+	Password         string             `json:"password"`
+	Dob              pgtype.Date        `json:"dob"`
+	Gender           string             `json:"gender"`
+	StateResidence   string             `json:"state_residence"`
+	CountryResidence string             `json:"country_residence"`
+	Nationality      string             `json:"nationality"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Driver struct {
-	ID               uuid.UUID    `json:"id"`
-	Name             string       `json:"name"`
-	Email            string       `json:"email"`
-	Phone            string       `json:"phone"`
-	Password         string       `json:"password"`
-	Dob              time.Time    `json:"dob"`
-	Gender           string       `json:"gender"`
-	StateResidence   string       `json:"state_residence"`
-	CountryResidence string       `json:"country_residence"`
-	Nationality      string       `json:"nationality"`
-	Available        sql.NullBool `json:"available"`
-	CreatedAt        sql.NullTime `json:"created_at"`
-	UpdatedAt        sql.NullTime `json:"updated_at"`
+	ID               pgtype.UUID        `json:"id"`
+	Name             string             `json:"name"`
+	Email            string             `json:"email"`
+	Phone            string             `json:"phone"`
+	Password         string             `json:"password"`
+	Dob              pgtype.Date        `json:"dob"`
+	Gender           string             `json:"gender"`
+	StateResidence   string             `json:"state_residence"`
+	CountryResidence string             `json:"country_residence"`
+	Nationality      string             `json:"nationality"`
+	Available        pgtype.Bool        `json:"available"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }

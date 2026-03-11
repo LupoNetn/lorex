@@ -56,5 +56,7 @@ func StartServer(router *gin.Engine, app *App) {
         slog.Error("Server forced to shutdown", "error", err)
     }
 
+	app.DBConn.Close()
+
     slog.Info("Server exiting")
 }

@@ -7,9 +7,8 @@ package sqlc
 
 import (
 	"context"
-	"database/sql"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createCompany = `-- name: CreateCompany :one
@@ -22,19 +21,19 @@ RETURNING id, name, description, logo, industry, phone, email, location, passwor
 `
 
 type CreateCompanyParams struct {
-	Name               string         `json:"name"`
-	Description        sql.NullString `json:"description"`
-	Logo               sql.NullString `json:"logo"`
-	Industry           string         `json:"industry"`
-	Phone              string         `json:"phone"`
-	Email              string         `json:"email"`
-	Location           string         `json:"location"`
-	Password           string         `json:"password"`
-	CustomerSignupCode string         `json:"customer_signup_code"`
+	Name               string      `json:"name"`
+	Description        pgtype.Text `json:"description"`
+	Logo               pgtype.Text `json:"logo"`
+	Industry           string      `json:"industry"`
+	Phone              string      `json:"phone"`
+	Email              string      `json:"email"`
+	Location           string      `json:"location"`
+	Password           string      `json:"password"`
+	CustomerSignupCode string      `json:"customer_signup_code"`
 }
 
 func (q *Queries) CreateCompany(ctx context.Context, arg CreateCompanyParams) (Company, error) {
-	row := q.db.QueryRowContext(ctx, createCompany,
+	row := q.db.QueryRow(ctx, createCompany,
 		arg.Name,
 		arg.Description,
 		arg.Logo,
@@ -69,8 +68,8 @@ DELETE FROM companies
 WHERE id = $1
 `
 
-func (q *Queries) DeleteCompany(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteCompany, id)
+func (q *Queries) DeleteCompany(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteCompany, id)
 	return err
 }
 
@@ -79,8 +78,8 @@ SELECT id, name, description, logo, industry, phone, email, location, password, 
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetCompany(ctx context.Context, id uuid.UUID) (Company, error) {
-	row := q.db.QueryRowContext(ctx, getCompany, id)
+func (q *Queries) GetCompany(ctx context.Context, id pgtype.UUID) (Company, error) {
+	row := q.db.QueryRow(ctx, getCompany, id)
 	var i Company
 	err := row.Scan(
 		&i.ID,
@@ -106,7 +105,7 @@ WHERE customer_signup_code = $1 LIMIT 1
 `
 
 func (q *Queries) GetCompanyBySignupCode(ctx context.Context, customerSignupCode string) (Company, error) {
-	row := q.db.QueryRowContext(ctx, getCompanyBySignupCode, customerSignupCode)
+	row := q.db.QueryRow(ctx, getCompanyBySignupCode, customerSignupCode)
 	var i Company
 	err := row.Scan(
 		&i.ID,
@@ -132,7 +131,7 @@ ORDER BY name
 `
 
 func (q *Queries) ListCompanies(ctx context.Context) ([]Company, error) {
-	rows, err := q.db.QueryContext(ctx, listCompanies)
+	rows, err := q.db.Query(ctx, listCompanies)
 	if err != nil {
 		return nil, err
 	}
@@ -159,9 +158,6 @@ func (q *Queries) ListCompanies(ctx context.Context) ([]Company, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -184,19 +180,19 @@ RETURNING id, name, description, logo, industry, phone, email, location, passwor
 `
 
 type UpdateCompanyParams struct {
-	ID          uuid.UUID      `json:"id"`
-	Name        string         `json:"name"`
-	Description sql.NullString `json:"description"`
-	Logo        sql.NullString `json:"logo"`
-	Industry    string         `json:"industry"`
-	Phone       string         `json:"phone"`
-	Email       string         `json:"email"`
-	Location    string         `json:"location"`
-	Password    string         `json:"password"`
+	ID          pgtype.UUID `json:"id"`
+	Name        string      `json:"name"`
+	Description pgtype.Text `json:"description"`
+	Logo        pgtype.Text `json:"logo"`
+	Industry    string      `json:"industry"`
+	Phone       string      `json:"phone"`
+	Email       string      `json:"email"`
+	Location    string      `json:"location"`
+	Password    string      `json:"password"`
 }
 
 func (q *Queries) UpdateCompany(ctx context.Context, arg UpdateCompanyParams) (Company, error) {
-	row := q.db.QueryRowContext(ctx, updateCompany,
+	row := q.db.QueryRow(ctx, updateCompany,
 		arg.ID,
 		arg.Name,
 		arg.Description,

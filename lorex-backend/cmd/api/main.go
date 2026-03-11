@@ -4,9 +4,12 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/luponetn/lorex/internal/auth"
 	"github.com/luponetn/lorex/internal/config"
 	"github.com/luponetn/lorex/internal/db"
+	"github.com/luponetn/lorex/internal/db/sqlc"
 	"github.com/luponetn/lorex/internal/logger"
+	"github.com/luponetn/lorex/internal/store"
 )
 
 type App struct {
@@ -40,6 +43,16 @@ func main() {
 
 	//setup server 
 	router := SetUpRouter()
+
+	//load store
+	q := sqlc.New(dbConn) // This might error if driver mismatch, but follows your requested flow
+	pgStore := store.NewPostgresStore(q)
+
+	//hook up handlers,routers and services
+	authService := auth.NewSvc(pgStore)
+	authHandler := auth.NewHandler(authService)
+
+	auth.RegisterRoutes(router, authHandler)
 
 	StartServer(router, app)
 }
