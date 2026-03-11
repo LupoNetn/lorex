@@ -2,6 +2,10 @@
 SELECT * FROM companies
 WHERE id = $1 LIMIT 1;
 
+-- name: GetCompanyByEmail :one
+SELECT * FROM companies
+WHERE email = $1 LIMIT 1;
+
 -- name: GetCompanyBySignupCode :one
 SELECT * FROM companies
 WHERE customer_signup_code = $1 LIMIT 1;

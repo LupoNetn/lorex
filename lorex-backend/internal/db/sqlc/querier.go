@@ -14,6 +14,7 @@ type Querier interface {
 	CreateCompany(ctx context.Context, arg CreateCompanyParams) (Company, error)
 	DeleteCompany(ctx context.Context, id pgtype.UUID) error
 	GetCompany(ctx context.Context, id pgtype.UUID) (Company, error)
+	GetCompanyByEmail(ctx context.Context, email string) (Company, error)
 	GetCompanyBySignupCode(ctx context.Context, customerSignupCode string) (Company, error)
 	ListCompanies(ctx context.Context) ([]Company, error)
 	UpdateCompany(ctx context.Context, arg UpdateCompanyParams) (Company, error)

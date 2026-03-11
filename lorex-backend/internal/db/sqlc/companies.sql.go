@@ -99,6 +99,32 @@ func (q *Queries) GetCompany(ctx context.Context, id pgtype.UUID) (Company, erro
 	return i, err
 }
 
+const getCompanyByEmail = `-- name: GetCompanyByEmail :one
+SELECT id, name, description, logo, industry, phone, email, location, password, plan, customer_signup_code, created_at, updated_at FROM companies
+WHERE email = $1 LIMIT 1
+`
+
+func (q *Queries) GetCompanyByEmail(ctx context.Context, email string) (Company, error) {
+	row := q.db.QueryRow(ctx, getCompanyByEmail, email)
+	var i Company
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Logo,
+		&i.Industry,
+		&i.Phone,
+		&i.Email,
+		&i.Location,
+		&i.Password,
+		&i.Plan,
+		&i.CustomerSignupCode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getCompanyBySignupCode = `-- name: GetCompanyBySignupCode :one
 SELECT id, name, description, logo, industry, phone, email, location, password, plan, customer_signup_code, created_at, updated_at FROM companies
 WHERE customer_signup_code = $1 LIMIT 1

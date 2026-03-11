@@ -2,9 +2,10 @@ package store
 
 import (
 	"context"
+	"errors"
 
-	"github.com/luponetn/lorex/internal/auth"
 	"github.com/luponetn/lorex/internal/db/sqlc"
+	"github.com/luponetn/lorex/internal/auth"
 )
 
 type PostgresStore struct {
@@ -20,9 +21,12 @@ func (s *PostgresStore) CreateCompany(ctx context.Context, arg sqlc.CreateCompan
 	return s.db.CreateCompany(ctx, arg)
 }
 
+func (s *PostgresStore) GetCompanyByEmail(ctx context.Context, email string) (sqlc.Company, error) {
+	return s.db.GetCompanyByEmail(ctx, email)
+}
+
 func (s *PostgresStore) LoginCompany(ctx context.Context, arg auth.LoginCompanyRequest) (auth.LoginCompanyResponse, error) {
-	// Implement login logic here or proxy it to sqlc
-	return auth.LoginCompanyResponse{}, nil
+	return auth.LoginCompanyResponse{}, errors.New("not implemented in store")
 }
 
 
