@@ -36,6 +36,8 @@ func NewSvc(store Service) Service {
 }
 
 //functions for svc struct to implement service 
+
+/* TODO: Add Email verification and background jobs processing later on!!*/
 func (s *Svc) CreateCompany(ctx context.Context, arg sqlc.CreateCompanyParams) (sqlc.Company, error) {
    return s.store.CreateCompany(ctx,arg)
 }
