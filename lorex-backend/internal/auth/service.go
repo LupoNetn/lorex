@@ -42,7 +42,8 @@ func (s *Svc) LoginCompany(ctx context.Context, arg LoginCompanyRequest) (LoginC
 	}
 
 	// Generate JWT tokens
-	accessToken, refreshToken, err := utils.GenerateTokens(company.ID.Bytes, company.Email)
+	accessToken, refreshToken, err := utils.GenerateTokens(company.ID.Bytes, company.Email, company.ID.Bytes)
+	
 	if err != nil {
 		return LoginCompanyResponse{}, errors.New("failed to generate auth tokens")
 	}

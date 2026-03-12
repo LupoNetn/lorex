@@ -63,7 +63,7 @@ func (h *Handler) CompanySignup(c *gin.Context) {
 
 	// Respond with the created company (avoiding returning the password)
 	res := CompanyResponse{
-		ID:        company.ID.Bytes, // uuid.UUID is likely compatible or needs conversion from pgtype.UUID
+		ID:        company.ID.Bytes, 
 		Name:      company.Name,
 		Email:     company.Email,
 		Industry:  company.Industry,
