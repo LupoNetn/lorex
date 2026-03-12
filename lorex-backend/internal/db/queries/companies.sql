@@ -24,16 +24,16 @@ RETURNING *;
 
 -- name: UpdateCompany :one
 UPDATE companies
-  set name = $2,
-  description = $3,
-  logo = $4,
-  industry = $5,
-  phone = $6,
-  email = $7,
-  location = $8,
-  password = $9,
+  set name = coalesce(sqlc.narg('name'), name),
+  description = coalesce(sqlc.narg('description'), description),
+  logo = coalesce(sqlc.narg('logo'), logo),
+  industry = coalesce(sqlc.narg('industry'), industry),
+  phone = coalesce(sqlc.narg('phone'), phone),
+  email = coalesce(sqlc.narg('email'), email),
+  location = coalesce(sqlc.narg('location'), location),
+  password = coalesce(sqlc.narg('password'), password),
   updated_at = NOW()
-WHERE id = $1
+WHERE id = sqlc.arg('id')
 RETURNING *;
 
 -- name: DeleteCompany :exec

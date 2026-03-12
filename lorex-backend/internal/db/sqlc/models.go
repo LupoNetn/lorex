@@ -42,6 +42,7 @@ type Customer struct {
 
 type Driver struct {
 	ID               pgtype.UUID        `json:"id"`
+	CompanyID        pgtype.UUID        `json:"company_id"`
 	Name             string             `json:"name"`
 	Email            string             `json:"email"`
 	Phone            string             `json:"phone"`

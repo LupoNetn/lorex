@@ -12,12 +12,24 @@ import (
 
 type Querier interface {
 	CreateCompany(ctx context.Context, arg CreateCompanyParams) (Company, error)
+	CreateCustomer(ctx context.Context, arg CreateCustomerParams) (Customer, error)
+	CreateDriver(ctx context.Context, arg CreateDriverParams) (Driver, error)
 	DeleteCompany(ctx context.Context, id pgtype.UUID) error
+	DeleteCustomer(ctx context.Context, id pgtype.UUID) error
+	DeleteDriver(ctx context.Context, id pgtype.UUID) error
 	GetCompany(ctx context.Context, id pgtype.UUID) (Company, error)
 	GetCompanyByEmail(ctx context.Context, email string) (Company, error)
 	GetCompanyBySignupCode(ctx context.Context, customerSignupCode string) (Company, error)
+	GetCustomer(ctx context.Context, id pgtype.UUID) (Customer, error)
+	GetCustomerByEmail(ctx context.Context, email string) (Customer, error)
+	GetDriver(ctx context.Context, id pgtype.UUID) (Driver, error)
+	GetDriverByEmail(ctx context.Context, email string) (Driver, error)
 	ListCompanies(ctx context.Context) ([]Company, error)
+	ListCustomers(ctx context.Context) ([]Customer, error)
+	ListDrivers(ctx context.Context) ([]Driver, error)
 	UpdateCompany(ctx context.Context, arg UpdateCompanyParams) (Company, error)
+	UpdateCustomer(ctx context.Context, arg UpdateCustomerParams) (Customer, error)
+	UpdateDriver(ctx context.Context, arg UpdateDriverParams) (Driver, error)
 }
 
 var _ Querier = (*Queries)(nil)

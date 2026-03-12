@@ -192,34 +192,33 @@ func (q *Queries) ListCompanies(ctx context.Context) ([]Company, error) {
 
 const updateCompany = `-- name: UpdateCompany :one
 UPDATE companies
-  set name = $2,
-  description = $3,
-  logo = $4,
-  industry = $5,
-  phone = $6,
-  email = $7,
-  location = $8,
-  password = $9,
+  set name = coalesce($1, name),
+  description = coalesce($2, description),
+  logo = coalesce($3, logo),
+  industry = coalesce($4, industry),
+  phone = coalesce($5, phone),
+  email = coalesce($6, email),
+  location = coalesce($7, location),
+  password = coalesce($8, password),
   updated_at = NOW()
-WHERE id = $1
+WHERE id = $9
 RETURNING id, name, description, logo, industry, phone, email, location, password, plan, customer_signup_code, created_at, updated_at
 `
 
 type UpdateCompanyParams struct {
-	ID          pgtype.UUID `json:"id"`
-	Name        string      `json:"name"`
+	Name        pgtype.Text `json:"name"`
 	Description pgtype.Text `json:"description"`
 	Logo        pgtype.Text `json:"logo"`
-	Industry    string      `json:"industry"`
-	Phone       string      `json:"phone"`
-	Email       string      `json:"email"`
-	Location    string      `json:"location"`
-	Password    string      `json:"password"`
+	Industry    pgtype.Text `json:"industry"`
+	Phone       pgtype.Text `json:"phone"`
+	Email       pgtype.Text `json:"email"`
+	Location    pgtype.Text `json:"location"`
+	Password    pgtype.Text `json:"password"`
+	ID          pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateCompany(ctx context.Context, arg UpdateCompanyParams) (Company, error) {
 	row := q.db.QueryRow(ctx, updateCompany,
-		arg.ID,
 		arg.Name,
 		arg.Description,
 		arg.Logo,
@@ -228,6 +227,7 @@ func (q *Queries) UpdateCompany(ctx context.Context, arg UpdateCompanyParams) (C
 		arg.Email,
 		arg.Location,
 		arg.Password,
+		arg.ID,
 	)
 	var i Company
 	err := row.Scan(

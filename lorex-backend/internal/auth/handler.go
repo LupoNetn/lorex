@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/luponetn/lorex/internal/db/sqlc"
 	"github.com/luponetn/lorex/utils"
+	"time"
 )
 
 type Handler struct {
@@ -49,7 +50,6 @@ func (h *Handler) CompanySignup(c *gin.Context) {
 			String: req.Description,
 			Valid:  true,
 		},
-		// For now, let's just generate a simple signup code or leave it placeholder
 		CustomerSignupCode: "CO-" + req.Name[:3],
 	}
 
@@ -84,6 +84,171 @@ func (h *Handler) CompanyLogin(c *gin.Context) {
 
 	// Call service to get login details (usually including tokens and company info)
 	res, err := h.Svc.LoginCompany(c.Request.Context(), req)
+	if err != nil {
+		slog.Error("Login failed", "error", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) DriverSignup(c *gin.Context) {
+	var req CreateDriverRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("Could not properly bind request with json", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationError(err)})
+		return
+	}
+
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		slog.Error("Could not hash password", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	dobTime, err := time.Parse("2006-01-02", req.Dob)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid DOB format, expected YYYY-MM-DD"})
+		return
+	}
+
+	company, err := h.Svc.GetCompanyBySignupCode(c.Request.Context(), req.CompanyCode)
+	if err != nil {
+		slog.Error("Invalid company code", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid company code"})
+		return
+	}
+
+	arg := sqlc.CreateDriverParams{
+		CompanyID:        pgtype.UUID{Bytes: company.ID.Bytes, Valid: true},
+		Name:             req.Name,
+		Email:            req.Email,
+		Phone:            req.Phone,
+		Password:         hashedPassword,
+		Dob:              pgtype.Date{Time: dobTime, Valid: true},
+		Gender:           req.Gender,
+		StateResidence:   req.StateResidence,
+		CountryResidence: req.CountryResidence,
+		Nationality:      req.Nationality,
+	}
+
+	driver, err := h.Svc.CreateDriver(c.Request.Context(), arg)
+	if err != nil {
+		slog.Error("Could not create driver", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create driver"})
+		return
+	}
+
+	res := DriverResponse{
+		ID:               driver.ID.Bytes,
+		CompanyID:        driver.CompanyID.Bytes,
+		Name:             driver.Name,
+		Email:            driver.Email,
+		Phone:            driver.Phone,
+		Dob:              driver.Dob.Time.Format(time.DateOnly),
+		Gender:           driver.Gender,
+		StateResidence:   driver.StateResidence,
+		CountryResidence: driver.CountryResidence,
+		Nationality:      driver.Nationality,
+		Available:        driver.Available.Bool,
+		CreatedAt:        driver.CreatedAt.Time,
+	}
+
+	c.JSON(http.StatusCreated, res)
+}
+
+func (h *Handler) DriverLogin(c *gin.Context) {
+	var req LoginDriverRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationError(err)})
+		return
+	}
+
+	res, err := h.Svc.LoginDriver(c.Request.Context(), req)
+	if err != nil {
+		slog.Error("Login failed", "error", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) CustomerSignup(c *gin.Context) {
+	var req CreateCustomerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		slog.Error("Could not properly bind request with json", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationError(err)})
+		return
+	}
+
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		slog.Error("Could not hash password", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	dobTime, err := time.Parse("2006-01-02", req.Dob)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid DOB format, expected YYYY-MM-DD"})
+		return
+	}
+
+	company, err := h.Svc.GetCompanyBySignupCode(c.Request.Context(), req.CompanyCode)
+	if err != nil {
+		slog.Error("Invalid company code", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid company code"})
+		return
+	}
+
+	arg := sqlc.CreateCustomerParams{
+		CompanyID:        pgtype.UUID{Bytes: company.ID.Bytes, Valid: true},
+		Name:             req.Name,
+		Email:            req.Email,
+		Phone:            req.Phone,
+		Password:         hashedPassword,
+		Dob:              pgtype.Date{Time: dobTime, Valid: true},
+		Gender:           req.Gender,
+		StateResidence:   req.StateResidence,
+		CountryResidence: req.CountryResidence,
+		Nationality:      req.Nationality,
+	}
+
+	customer, err := h.Svc.CreateCustomer(c.Request.Context(), arg)
+	if err != nil {
+		slog.Error("Could not create customer", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create customer"})
+		return
+	}
+
+	res := CustomerResponse{
+		ID:               customer.ID.Bytes,
+		CompanyID:        customer.CompanyID.Bytes,
+		Name:             customer.Name,
+		Email:            customer.Email,
+		Phone:            customer.Phone,
+		Dob:              customer.Dob.Time.Format(time.DateOnly),
+		Gender:           customer.Gender,
+		StateResidence:   customer.StateResidence,
+		CountryResidence: customer.CountryResidence,
+		Nationality:      customer.Nationality,
+		CreatedAt:        customer.CreatedAt.Time,
+	}
+
+	c.JSON(http.StatusCreated, res)
+}
+
+func (h *Handler) CustomerLogin(c *gin.Context) {
+	var req LoginCustomerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationError(err)})
+		return
+	}
+
+	res, err := h.Svc.LoginCustomer(c.Request.Context(), req)
 	if err != nil {
 		slog.Error("Login failed", "error", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})

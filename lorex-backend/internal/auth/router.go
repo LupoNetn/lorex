@@ -3,8 +3,19 @@ package auth
 import "github.com/gin-gonic/gin"
 
 func RegisterRoutes(r *gin.Engine, h *Handler) {
-   authGroup := r.Group("/auth")
+   companyAuthGroup := r.Group("/company-auth")
+   driverAuthGroup := r.Group("/driver-auth")
+   customerAuthGroup := r.Group("/customer-auth")
 
-   authGroup.POST("/company/signup", h.CompanySignup)
-   authGroup.POST("/company/login", h.CompanyLogin)
+   //company auth routes
+   companyAuthGroup.POST("/signup", h.CompanySignup)
+   companyAuthGroup.POST("/login", h.CompanyLogin)
+
+   //driver auth routes
+   driverAuthGroup.POST("/signup", h.DriverSignup)
+   driverAuthGroup.POST("/login", h.DriverLogin)
+
+   //customer auth routes
+   customerAuthGroup.POST("/signup", h.CustomerSignup)
+   customerAuthGroup.POST("/login", h.CustomerLogin)
 }
