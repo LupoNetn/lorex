@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"time"
+	"strings"
 	"log/slog"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -80,4 +81,13 @@ func VerifyToken(tokenString string) (*CustomClaims, error) {
 	}
 	slog.Error("Invalid token")
 	return nil, errors.New("invalid token")
+}
+
+
+func ExtractToken(tokenString string) string {
+	parts := strings.Split(tokenString, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return ""
+	}
+	return parts[1]
 }
