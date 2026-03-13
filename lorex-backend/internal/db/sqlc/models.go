@@ -40,9 +40,26 @@ type Customer struct {
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
 
+type Delivery struct {
+	ID              pgtype.UUID        `json:"id"`
+	CustomerID      pgtype.UUID        `json:"customer_id"`
+	DriverID        pgtype.UUID        `json:"driver_id"`
+	PickupAddress   string             `json:"pickup_address"`
+	DeliveryAddress string             `json:"delivery_address"`
+	PickupLat       pgtype.Float8      `json:"pickup_lat"`
+	PickupLng       pgtype.Float8      `json:"pickup_lng"`
+	DeliveryLat     pgtype.Float8      `json:"delivery_lat"`
+	DeliveryLng     pgtype.Float8      `json:"delivery_lng"`
+	Status          string             `json:"status"`
+	PackageType     pgtype.Text        `json:"package_type"`
+	Weight          pgtype.Float8      `json:"weight"`
+	Price           pgtype.Numeric     `json:"price"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Driver struct {
 	ID               pgtype.UUID        `json:"id"`
-	CompanyID        pgtype.UUID        `json:"company_id"`
 	Name             string             `json:"name"`
 	Email            string             `json:"email"`
 	Phone            string             `json:"phone"`
@@ -55,4 +72,5 @@ type Driver struct {
 	Available        pgtype.Bool        `json:"available"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	CompanyID        pgtype.UUID        `json:"company_id"`
 }

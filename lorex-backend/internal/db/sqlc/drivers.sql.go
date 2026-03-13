@@ -17,7 +17,7 @@ INSERT INTO drivers (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 )
-RETURNING id, company_id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at
+RETURNING id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id
 `
 
 type CreateDriverParams struct {
@@ -49,7 +49,6 @@ func (q *Queries) CreateDriver(ctx context.Context, arg CreateDriverParams) (Dri
 	var i Driver
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
 		&i.Name,
 		&i.Email,
 		&i.Phone,
@@ -62,6 +61,7 @@ func (q *Queries) CreateDriver(ctx context.Context, arg CreateDriverParams) (Dri
 		&i.Available,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompanyID,
 	)
 	return i, err
 }
@@ -77,7 +77,7 @@ func (q *Queries) DeleteDriver(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getDriver = `-- name: GetDriver :one
-SELECT id, company_id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at FROM drivers
+SELECT id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id FROM drivers
 WHERE id = $1 LIMIT 1
 `
 
@@ -86,7 +86,6 @@ func (q *Queries) GetDriver(ctx context.Context, id pgtype.UUID) (Driver, error)
 	var i Driver
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
 		&i.Name,
 		&i.Email,
 		&i.Phone,
@@ -99,12 +98,13 @@ func (q *Queries) GetDriver(ctx context.Context, id pgtype.UUID) (Driver, error)
 		&i.Available,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompanyID,
 	)
 	return i, err
 }
 
 const getDriverByEmail = `-- name: GetDriverByEmail :one
-SELECT id, company_id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at FROM drivers
+SELECT id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id FROM drivers
 WHERE email = $1 LIMIT 1
 `
 
@@ -113,7 +113,6 @@ func (q *Queries) GetDriverByEmail(ctx context.Context, email string) (Driver, e
 	var i Driver
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
 		&i.Name,
 		&i.Email,
 		&i.Phone,
@@ -126,12 +125,13 @@ func (q *Queries) GetDriverByEmail(ctx context.Context, email string) (Driver, e
 		&i.Available,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompanyID,
 	)
 	return i, err
 }
 
 const listDrivers = `-- name: ListDrivers :many
-SELECT id, company_id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at FROM drivers
+SELECT id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id FROM drivers
 ORDER BY name
 `
 
@@ -146,7 +146,6 @@ func (q *Queries) ListDrivers(ctx context.Context) ([]Driver, error) {
 		var i Driver
 		if err := rows.Scan(
 			&i.ID,
-			&i.CompanyID,
 			&i.Name,
 			&i.Email,
 			&i.Phone,
@@ -159,6 +158,7 @@ func (q *Queries) ListDrivers(ctx context.Context) ([]Driver, error) {
 			&i.Available,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CompanyID,
 		); err != nil {
 			return nil, err
 		}
@@ -185,7 +185,7 @@ UPDATE drivers
   available = coalesce($11, available),
   updated_at = NOW()
 WHERE id = $12
-RETURNING id, company_id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at
+RETURNING id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id
 `
 
 type UpdateDriverParams struct {
@@ -221,7 +221,6 @@ func (q *Queries) UpdateDriver(ctx context.Context, arg UpdateDriverParams) (Dri
 	var i Driver
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
 		&i.Name,
 		&i.Email,
 		&i.Phone,
@@ -234,6 +233,7 @@ func (q *Queries) UpdateDriver(ctx context.Context, arg UpdateDriverParams) (Dri
 		&i.Available,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompanyID,
 	)
 	return i, err
 }
