@@ -21,6 +21,7 @@ type TaskStore interface {
 type TaskProcessor interface {
 	Start() error
 	ProcessTaskAssignDriver(ctx context.Context, t *asynq.Task) error
+	AssignDriver(ctx context.Context, deliveryID string) error
 }
 
 type RedisTaskProcessor struct {
@@ -62,6 +63,11 @@ func (p *RedisTaskProcessor) ProcessTaskAssignDriver(ctx context.Context, t *asy
 
 	slog.Info("processing driver assignment", "delivery_id", payload.DeliveryID)
 
+	return p.AssignDriver(ctx, payload.DeliveryID)
+}
+
+func (p *RedisTaskProcessor) AssignDriver(ctx context.Context, deliveryID string) error {
 	// Logic for finding and assigning a driver will go here
+	// This method only takes the deliveryID, as requested.
 	return nil
 }
