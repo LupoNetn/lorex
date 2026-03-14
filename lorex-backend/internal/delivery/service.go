@@ -5,9 +5,10 @@ import (
 	"encoding/hex"
 	"log/slog"
 
-	"github.com/luponetn/lorex/internal/db/sqlc"
-	"github.com/luponetn/lorex/internal/tasks"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/luponetn/lorex/internal/db/sqlc"
+	"github.com/luponetn/lorex/internal/location"
+	"github.com/luponetn/lorex/internal/tasks"
 )
 
 type DeliveryStore interface {
@@ -24,12 +25,14 @@ type Service interface {
 type Svc struct {
 	store  DeliveryStore
 	enquer *tasks.AsynqClient
+	locStore location.Store
 }
 
-func NewSvc(store DeliveryStore, enquer *tasks.AsynqClient) Service {
+func NewSvc(store DeliveryStore, enquer *tasks.AsynqClient, locStore location.Store) Service {
 	return &Svc{
 		store:  store,
 		enquer: enquer,
+		locStore: locStore,
 	}
 }
 
@@ -51,11 +54,14 @@ func (s *Svc) CreateDelivery(ctx context.Context, arg sqlc.CreateDeliveryParams)
 func (s *Svc) AssignDriver(ctx context.Context, deliveryID string) error {
 	// 1. Fetch delivery details using deliveryID
 	var uuid pgtype.UUID
-	err := uuid.Set(uuidStr)
+	err := uuid.Scan(deliveryID)
 	if err != nil {
 		slog.Error("Error when trying to parse string to uuid", "error", err)
 	}
-	delivery, err := s.store.GetDelivery(ctx, uuid)
+	//delivery, err := s.store.GetDelivery(ctx, uuid)
+	//if err != nil {
+	//	slog.Error("Error when trying to get delivery", "error", err)
+	//}
 	// 2. Search for available drivers
 	// 3. Call s.store.AssignDriver with the delivery ID and selected Driver ID.
 	return nil

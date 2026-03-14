@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 
@@ -11,9 +12,11 @@ import (
 	"github.com/luponetn/lorex/internal/db"
 	"github.com/luponetn/lorex/internal/db/sqlc"
 	"github.com/luponetn/lorex/internal/delivery"
+	"github.com/luponetn/lorex/internal/location"
 	"github.com/luponetn/lorex/internal/logger"
 	"github.com/luponetn/lorex/internal/store"
 	"github.com/luponetn/lorex/internal/tasks"
+	"github.com/redis/go-redis/v9"
 )
 
 type App struct {
@@ -48,13 +51,34 @@ func main() {
 	//setup server 
 	router := SetUpRouter()
 
-	//setup asynq client
+	
+
+	//get redis url for asynq client and redis client usage
 	redisURL := os.Getenv("REDIS_URL")
 	if redisURL == "" {
 		slog.Error("redis url is not set")
 		return
 	}
 
+	//setup redis client
+	redisClientOpt, err := redis.ParseURL(redisURL)
+    if err != nil {
+    slog.Error("failed to parse redis url for client", "error", err)
+    return
+    }
+
+	rdb := redis.NewClient(redisClientOpt)
+	locStore := location.NewRedisStore(rdb)
+
+	// verify connection
+	ctx := context.Background()
+    if err := rdb.Ping(ctx).Err(); err != nil {
+    slog.Error("redis ping failed", "error", err)
+    return
+    }
+    slog.Info("redis connected")
+	
+    //setup asynq redis client
 	redisOpt, err := asynq.ParseRedisURI(redisURL)
 	if err != nil {
 		slog.Error("failed to parse redis uri")
@@ -88,7 +112,7 @@ func main() {
 	auth.RegisterRoutes(router, authHandler)
 
 	// delivery
-	deliveryService := delivery.NewSvc(DeliveryPGStore, enquer)
+	deliveryService := delivery.NewSvc(DeliveryPGStore, enquer, locStore)
 	deliveryHandler := delivery.NewHandler(deliveryService)
 	delivery.RegisterRoutes(router, deliveryHandler)
 
