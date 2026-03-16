@@ -17,7 +17,7 @@ INSERT INTO drivers (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 )
-RETURNING id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id
+RETURNING id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id, active_delivery_id, vehicle_type, vehicle_plate_number, max_weight_capacity, rating, total_deliveries
 `
 
 type CreateDriverParams struct {
@@ -62,6 +62,12 @@ func (q *Queries) CreateDriver(ctx context.Context, arg CreateDriverParams) (Dri
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompanyID,
+		&i.ActiveDeliveryID,
+		&i.VehicleType,
+		&i.VehiclePlateNumber,
+		&i.MaxWeightCapacity,
+		&i.Rating,
+		&i.TotalDeliveries,
 	)
 	return i, err
 }
@@ -77,7 +83,7 @@ func (q *Queries) DeleteDriver(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getDriver = `-- name: GetDriver :one
-SELECT id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id FROM drivers
+SELECT id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id, active_delivery_id, vehicle_type, vehicle_plate_number, max_weight_capacity, rating, total_deliveries FROM drivers
 WHERE id = $1 LIMIT 1
 `
 
@@ -99,12 +105,18 @@ func (q *Queries) GetDriver(ctx context.Context, id pgtype.UUID) (Driver, error)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompanyID,
+		&i.ActiveDeliveryID,
+		&i.VehicleType,
+		&i.VehiclePlateNumber,
+		&i.MaxWeightCapacity,
+		&i.Rating,
+		&i.TotalDeliveries,
 	)
 	return i, err
 }
 
 const getDriverByEmail = `-- name: GetDriverByEmail :one
-SELECT id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id FROM drivers
+SELECT id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id, active_delivery_id, vehicle_type, vehicle_plate_number, max_weight_capacity, rating, total_deliveries FROM drivers
 WHERE email = $1 LIMIT 1
 `
 
@@ -126,12 +138,18 @@ func (q *Queries) GetDriverByEmail(ctx context.Context, email string) (Driver, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompanyID,
+		&i.ActiveDeliveryID,
+		&i.VehicleType,
+		&i.VehiclePlateNumber,
+		&i.MaxWeightCapacity,
+		&i.Rating,
+		&i.TotalDeliveries,
 	)
 	return i, err
 }
 
 const listDrivers = `-- name: ListDrivers :many
-SELECT id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id FROM drivers
+SELECT id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id, active_delivery_id, vehicle_type, vehicle_plate_number, max_weight_capacity, rating, total_deliveries FROM drivers
 ORDER BY name
 `
 
@@ -159,6 +177,12 @@ func (q *Queries) ListDrivers(ctx context.Context) ([]Driver, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CompanyID,
+			&i.ActiveDeliveryID,
+			&i.VehicleType,
+			&i.VehiclePlateNumber,
+			&i.MaxWeightCapacity,
+			&i.Rating,
+			&i.TotalDeliveries,
 		); err != nil {
 			return nil, err
 		}
@@ -185,7 +209,7 @@ UPDATE drivers
   available = coalesce($11, available),
   updated_at = NOW()
 WHERE id = $12
-RETURNING id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id
+RETURNING id, name, email, phone, password, dob, gender, state_residence, country_residence, nationality, available, created_at, updated_at, company_id, active_delivery_id, vehicle_type, vehicle_plate_number, max_weight_capacity, rating, total_deliveries
 `
 
 type UpdateDriverParams struct {
@@ -234,6 +258,12 @@ func (q *Queries) UpdateDriver(ctx context.Context, arg UpdateDriverParams) (Dri
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CompanyID,
+		&i.ActiveDeliveryID,
+		&i.VehicleType,
+		&i.VehiclePlateNumber,
+		&i.MaxWeightCapacity,
+		&i.Rating,
+		&i.TotalDeliveries,
 	)
 	return i, err
 }

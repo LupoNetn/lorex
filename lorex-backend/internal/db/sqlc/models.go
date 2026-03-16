@@ -5,8 +5,56 @@
 package sqlc
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type VehicleEnum string
+
+const (
+	VehicleEnumBike       VehicleEnum = "bike"
+	VehicleEnumMotorcycle VehicleEnum = "motorcycle"
+	VehicleEnumCar        VehicleEnum = "car"
+	VehicleEnumVan        VehicleEnum = "van"
+	VehicleEnumTruck      VehicleEnum = "truck"
+)
+
+func (e *VehicleEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = VehicleEnum(s)
+	case string:
+		*e = VehicleEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for VehicleEnum: %T", src)
+	}
+	return nil
+}
+
+type NullVehicleEnum struct {
+	VehicleEnum VehicleEnum `json:"vehicle_enum"`
+	Valid       bool        `json:"valid"` // Valid is true if VehicleEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullVehicleEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.VehicleEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.VehicleEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullVehicleEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.VehicleEnum), nil
+}
 
 type Company struct {
 	ID                 pgtype.UUID        `json:"id"`
@@ -56,21 +104,40 @@ type Delivery struct {
 	Price           pgtype.Numeric     `json:"price"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	SuitableVehicle VehicleEnum        `json:"suitable_vehicle"`
 }
 
 type Driver struct {
-	ID               pgtype.UUID        `json:"id"`
-	Name             string             `json:"name"`
-	Email            string             `json:"email"`
-	Phone            string             `json:"phone"`
-	Password         string             `json:"password"`
-	Dob              pgtype.Date        `json:"dob"`
-	Gender           string             `json:"gender"`
-	StateResidence   string             `json:"state_residence"`
-	CountryResidence string             `json:"country_residence"`
-	Nationality      string             `json:"nationality"`
-	Available        pgtype.Bool        `json:"available"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
-	CompanyID        pgtype.UUID        `json:"company_id"`
+	ID                 pgtype.UUID        `json:"id"`
+	Name               string             `json:"name"`
+	Email              string             `json:"email"`
+	Phone              string             `json:"phone"`
+	Password           string             `json:"password"`
+	Dob                pgtype.Date        `json:"dob"`
+	Gender             string             `json:"gender"`
+	StateResidence     string             `json:"state_residence"`
+	CountryResidence   string             `json:"country_residence"`
+	Nationality        string             `json:"nationality"`
+	Available          pgtype.Bool        `json:"available"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	CompanyID          pgtype.UUID        `json:"company_id"`
+	ActiveDeliveryID   pgtype.UUID        `json:"active_delivery_id"`
+	VehicleType        VehicleEnum        `json:"vehicle_type"`
+	VehiclePlateNumber string             `json:"vehicle_plate_number"`
+	MaxWeightCapacity  float64            `json:"max_weight_capacity"`
+	Rating             float64            `json:"rating"`
+	TotalDeliveries    int32              `json:"total_deliveries"`
+}
+
+type Notification struct {
+	ID           pgtype.UUID      `json:"id"`
+	ReceiverID   pgtype.UUID      `json:"receiver_id"`
+	ReceiverType string           `json:"receiver_type"`
+	CompanyID    pgtype.UUID      `json:"company_id"`
+	Message      string           `json:"message"`
+	Type         string           `json:"type"`
+	Read         pgtype.Bool      `json:"read"`
+	CreatedAt    pgtype.Timestamp `json:"created_at"`
+	UpdatedAt    pgtype.Timestamp `json:"updated_at"`
 }

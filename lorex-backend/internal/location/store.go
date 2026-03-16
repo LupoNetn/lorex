@@ -2,6 +2,8 @@ package location
 
 import (
 	"context"
+	"time"
+	"log/slog"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -25,11 +27,16 @@ func NewRedisStore(client *redis.Client) Store {
 }
 
 func (r *RedisStore) SetDriverLocation(ctx context.Context, driverID string, lat, lng float64) error {
-	return r.client.GeoAdd(ctx,driverGeoKey, &redis.GeoLocation{
+	err := r.client.GeoAdd(ctx,driverGeoKey, &redis.GeoLocation{
 		Name: driverID,
 		Longitude: lng,
 		Latitude: lat,	
 	}).Err()
+	if err != nil {
+		return err
+	}
+
+	return r.client.Set(ctx,"active:"+driverID,"true", 30*time.Second).Err()
 }
 
 func (r *RedisStore) GetNearbyDrivers(ctx context.Context, lat, lng float64, radius float64) ([]string, error) {
@@ -45,7 +52,23 @@ func (r *RedisStore) GetNearbyDrivers(ctx context.Context, lat, lng float64, rad
 		return nil, err
 	}
 
-	return locations, nil
+	//verify sticky notes only keep drivers with active heartbeats
+	var activeDrivers []string
+	for _, driverID := range locations {
+		exists, err := r.client.Exists(ctx, "active:"+driverID).Result()
+		if err != nil {
+			slog.Error("error checking driver activity", "error", err)
+			continue
+		}
+		if exists == 0 {
+			// sticky note gone — clean up the dot too
+            r.client.ZRem(ctx, "drivers:active", driverID)
+            continue
+		}
+		activeDrivers = append(activeDrivers, driverID)
+	}
+
+	return activeDrivers, nil
 }
 
 func (r *RedisStore) DeleteDriver(ctx context.Context, driverID string) error {

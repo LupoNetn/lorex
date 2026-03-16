@@ -1,9 +1,11 @@
 -- +goose Up
+-- +goose StatementBegin
 DO $$ BEGIN
-  CREATE TYPE status AS ENUM ('pending', 'assigned', 'successful', 'failed')
+  CREATE TYPE status AS ENUM ('pending', 'assigned', 'successful', 'failed');
 EXCEPTION 
   WHEN duplicate_object THEN null;
 END $$; 
+-- +goose StatementEnd 
 
 CREATE TABLE IF NOT EXISTS deliveries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

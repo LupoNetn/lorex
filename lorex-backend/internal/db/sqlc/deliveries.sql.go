@@ -15,7 +15,7 @@ const assignDriver = `-- name: AssignDriver :one
 UPDATE deliveries
 SET driver_id = $2, status = 'assigned', updated_at = NOW()
 WHERE id = $1
-RETURNING id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at
+RETURNING id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at, suitable_vehicle
 `
 
 type AssignDriverParams struct {
@@ -42,6 +42,7 @@ func (q *Queries) AssignDriver(ctx context.Context, arg AssignDriverParams) (Del
 		&i.Price,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SuitableVehicle,
 	)
 	return i, err
 }
@@ -53,7 +54,7 @@ INSERT INTO deliveries (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 )
-RETURNING id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at
+RETURNING id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at, suitable_vehicle
 `
 
 type CreateDeliveryParams struct {
@@ -99,6 +100,7 @@ func (q *Queries) CreateDelivery(ctx context.Context, arg CreateDeliveryParams) 
 		&i.Price,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SuitableVehicle,
 	)
 	return i, err
 }
@@ -114,7 +116,7 @@ func (q *Queries) DeleteDelivery(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getDelivery = `-- name: GetDelivery :one
-SELECT id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at FROM deliveries
+SELECT id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at, suitable_vehicle FROM deliveries
 WHERE id = $1 LIMIT 1
 `
 
@@ -137,12 +139,13 @@ func (q *Queries) GetDelivery(ctx context.Context, id pgtype.UUID) (Delivery, er
 		&i.Price,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SuitableVehicle,
 	)
 	return i, err
 }
 
 const listDeliveries = `-- name: ListDeliveries :many
-SELECT id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at FROM deliveries
+SELECT id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at, suitable_vehicle FROM deliveries
 ORDER BY created_at DESC
 `
 
@@ -171,6 +174,7 @@ func (q *Queries) ListDeliveries(ctx context.Context) ([]Delivery, error) {
 			&i.Price,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SuitableVehicle,
 		); err != nil {
 			return nil, err
 		}
@@ -183,7 +187,7 @@ func (q *Queries) ListDeliveries(ctx context.Context) ([]Delivery, error) {
 }
 
 const listDeliveriesByCustomer = `-- name: ListDeliveriesByCustomer :many
-SELECT id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at FROM deliveries
+SELECT id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at, suitable_vehicle FROM deliveries
 WHERE customer_id = $1
 ORDER BY created_at DESC
 `
@@ -213,6 +217,7 @@ func (q *Queries) ListDeliveriesByCustomer(ctx context.Context, customerID pgtyp
 			&i.Price,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SuitableVehicle,
 		); err != nil {
 			return nil, err
 		}
@@ -225,7 +230,7 @@ func (q *Queries) ListDeliveriesByCustomer(ctx context.Context, customerID pgtyp
 }
 
 const listDeliveriesByDriver = `-- name: ListDeliveriesByDriver :many
-SELECT id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at FROM deliveries
+SELECT id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at, suitable_vehicle FROM deliveries
 WHERE driver_id = $1
 ORDER BY created_at DESC
 `
@@ -255,6 +260,7 @@ func (q *Queries) ListDeliveriesByDriver(ctx context.Context, driverID pgtype.UU
 			&i.Price,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SuitableVehicle,
 		); err != nil {
 			return nil, err
 		}
@@ -283,7 +289,7 @@ SET
   price = coalesce($12, price),
   updated_at = NOW()
 WHERE id = $13
-RETURNING id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at
+RETURNING id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at, suitable_vehicle
 `
 
 type UpdateDeliveryParams struct {
@@ -335,6 +341,7 @@ func (q *Queries) UpdateDelivery(ctx context.Context, arg UpdateDeliveryParams) 
 		&i.Price,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SuitableVehicle,
 	)
 	return i, err
 }
@@ -343,7 +350,7 @@ const updateDeliveryStatus = `-- name: UpdateDeliveryStatus :one
 UPDATE deliveries
 SET status = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at
+RETURNING id, customer_id, driver_id, pickup_address, delivery_address, pickup_lat, pickup_lng, delivery_lat, delivery_lng, status, package_type, weight, price, created_at, updated_at, suitable_vehicle
 `
 
 type UpdateDeliveryStatusParams struct {
@@ -370,6 +377,7 @@ func (q *Queries) UpdateDeliveryStatus(ctx context.Context, arg UpdateDeliverySt
 		&i.Price,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SuitableVehicle,
 	)
 	return i, err
 }

@@ -16,6 +16,7 @@ type Querier interface {
 	CreateCustomer(ctx context.Context, arg CreateCustomerParams) (Customer, error)
 	CreateDelivery(ctx context.Context, arg CreateDeliveryParams) (Delivery, error)
 	CreateDriver(ctx context.Context, arg CreateDriverParams) (Driver, error)
+	CreateNotification(ctx context.Context, arg CreateNotificationParams) error
 	DeleteCompany(ctx context.Context, id pgtype.UUID) error
 	DeleteCustomer(ctx context.Context, id pgtype.UUID) error
 	DeleteDelivery(ctx context.Context, id pgtype.UUID) error
@@ -28,12 +29,14 @@ type Querier interface {
 	GetDelivery(ctx context.Context, id pgtype.UUID) (Delivery, error)
 	GetDriver(ctx context.Context, id pgtype.UUID) (Driver, error)
 	GetDriverByEmail(ctx context.Context, email string) (Driver, error)
+	GetNotifications(ctx context.Context, receiverID pgtype.UUID) ([]Notification, error)
 	ListCompanies(ctx context.Context) ([]Company, error)
 	ListCustomers(ctx context.Context) ([]Customer, error)
 	ListDeliveries(ctx context.Context) ([]Delivery, error)
 	ListDeliveriesByCustomer(ctx context.Context, customerID pgtype.UUID) ([]Delivery, error)
 	ListDeliveriesByDriver(ctx context.Context, driverID pgtype.UUID) ([]Delivery, error)
 	ListDrivers(ctx context.Context) ([]Driver, error)
+	MarkNotificationAsRead(ctx context.Context, id pgtype.UUID) error
 	UpdateCompany(ctx context.Context, arg UpdateCompanyParams) (Company, error)
 	UpdateCustomer(ctx context.Context, arg UpdateCustomerParams) (Customer, error)
 	UpdateDelivery(ctx context.Context, arg UpdateDeliveryParams) (Delivery, error)

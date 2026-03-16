@@ -9,6 +9,7 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/luponetn/lorex/internal/db/sqlc"
+	"github.com/luponetn/lorex/internal/location"
 )
 
 // TaskStore defines the minimal DB methods needed for background jobs.
@@ -16,6 +17,7 @@ import (
 type TaskStore interface {
 	GetDelivery(ctx context.Context, id pgtype.UUID) (sqlc.Delivery, error)
 	UpdateDeliveryStatus(ctx context.Context, arg sqlc.UpdateDeliveryStatusParams) (sqlc.Delivery, error)
+	GetDriver(ctx context.Context, id pgtype.UUID) (sqlc.Driver, error)
 }
 
 type TaskProcessor interface {
@@ -27,9 +29,10 @@ type TaskProcessor interface {
 type RedisTaskProcessor struct {
 	server *asynq.Server
 	store  TaskStore
+	locStore location.Store
 }
 
-func NewRedisTaskProcessor(redisOpt asynq.RedisConnOpt, store TaskStore) TaskProcessor {
+func NewRedisTaskProcessor(redisOpt asynq.RedisConnOpt, store TaskStore, locStore location.Store) TaskProcessor {
 	server := asynq.NewServer(
 		redisOpt,
 		asynq.Config{
@@ -43,6 +46,7 @@ func NewRedisTaskProcessor(redisOpt asynq.RedisConnOpt, store TaskStore) TaskPro
 	return &RedisTaskProcessor{
 		server: server,
 		store:  store,
+		locStore: locStore,
 	}
 }
 
@@ -67,7 +71,64 @@ func (p *RedisTaskProcessor) ProcessTaskAssignDriver(ctx context.Context, t *asy
 }
 
 func (p *RedisTaskProcessor) AssignDriver(ctx context.Context, deliveryID string) error {
-	// Logic for finding and assigning a driver will go here
-	// This method only takes the deliveryID, as requested.
+	//get details about full delivery
+	var uuid pgtype.UUID
+	uuid.Scan(deliveryID)
+	delivery, err := p.store.GetDelivery(ctx, uuid)
+	if err != nil {
+		slog.Error("could not get delivery", "error", err)
+		return err
+	}
+
+	//get nearest driver to delivery pickup point
+	drivers, err := p.locStore.GetNearbyDrivers(ctx, delivery.PickupLat.Float64, delivery.PickupLng.Float64, 5.0)
+	if err != nil {
+		slog.Error("could not get nearby drivers", "error", err)
+		return err
+	}
+
+	if len(drivers) == 0 {
+		slog.Warn("no drivers found for delivery", "delivery_id", deliveryID)
+		return nil
+	}
+    
+	var driverScore int
+	var computedDriverScore int
+	var assignedDriverID string
+	for _, driver := range drivers {
+		var driverUUID pgtype.UUID
+		driverUUID.Scan(driver)
+        fetchedDriver, err := p.store.GetDriver(ctx,driverUUID)
+		if err != nil {
+			slog.Error("could not get driver", "error", err)
+			continue
+		}
+		if fetchedDriver.ActiveDeliveryID.Valid {
+			continue
+		}
+		if fetchedDriver.VehicleType != delivery.SuitableVehicle {
+			continue
+		}
+		if fetchedDriver.MaxWeightCapacity < delivery.Weight.Float64 {
+			continue
+		}
+		computedDriverScore = 1
+		if fetchedDriver.Rating > 4 {
+			computedDriverScore * 10
+		}
+		if fetchedDriver.TotalDeliveries > 10 {
+			computedDriverScore++
+		}
+		if computedDriverScore > driverScore {
+			driverScore = computedDriverScore
+			assignedDriverID = driverUUID.String()
+		}
+	}
+	if assignedDriverID == "" {
+		slog.Warn("no drivers found for delivery", "delivery_id", deliveryID)
+		return nil
+	}
+	
+
 	return nil
 }

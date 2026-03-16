@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"log/slog"
 	"os"
 
@@ -61,13 +62,13 @@ func main() {
 	}
 
 	//setup redis client
-	redisClientOpt, err := redis.ParseURL(redisURL)
-    if err != nil {
-    slog.Error("failed to parse redis url for client", "error", err)
-    return
-    }
-
-	rdb := redis.NewClient(redisClientOpt)
+	rdb := redis.NewClient(&redis.Options{
+    Addr:         os.Getenv("REDIS_ADDR"),
+    Password:     os.Getenv("REDIS_PASSWORD"),
+    TLSConfig:    &tls.Config{},
+    PoolSize:     10,  // max open connections
+    MinIdleConns: 3,   // always keep 3 warm connections ready
+})
 	locStore := location.NewRedisStore(rdb)
 
 	// verify connection
@@ -95,7 +96,7 @@ func main() {
 	q := sqlc.New(dbConn) // This might error if driver mismatch, but follows your requested flow
 
 	// setup asynq server (The Worker)
-	taskProcessor := tasks.NewRedisTaskProcessor(redisOpt, q)
+	taskProcessor := tasks.NewRedisTaskProcessor(redisOpt, q, locStore)
 	go func() {
 		slog.Info("starting asynq task processor")
 		if err := taskProcessor.Start(); err != nil {
@@ -115,6 +116,10 @@ func main() {
 	deliveryService := delivery.NewSvc(DeliveryPGStore, enquer, locStore)
 	deliveryHandler := delivery.NewHandler(deliveryService)
 	delivery.RegisterRoutes(router, deliveryHandler)
+
+	// location
+	locationHandler := location.NewHandler(locStore)
+	location.RegisterRoutes(router, locationHandler)
 
 	StartServer(router, app)
 }

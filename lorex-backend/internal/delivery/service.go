@@ -19,7 +19,6 @@ type DeliveryStore interface {
 
 type Service interface {
 	CreateDelivery(ctx context.Context, arg sqlc.CreateDeliveryParams) (sqlc.Delivery, error)
-	AssignDriver(ctx context.Context, deliveryID string) error
 }
 
 type Svc struct {
@@ -51,18 +50,3 @@ func (s *Svc) CreateDelivery(ctx context.Context, arg sqlc.CreateDeliveryParams)
 	return delivery, nil
 }
 
-func (s *Svc) AssignDriver(ctx context.Context, deliveryID string) error {
-	// 1. Fetch delivery details using deliveryID
-	var uuid pgtype.UUID
-	err := uuid.Scan(deliveryID)
-	if err != nil {
-		slog.Error("Error when trying to parse string to uuid", "error", err)
-	}
-	//delivery, err := s.store.GetDelivery(ctx, uuid)
-	//if err != nil {
-	//	slog.Error("Error when trying to get delivery", "error", err)
-	//}
-	// 2. Search for available drivers
-	// 3. Call s.store.AssignDriver with the delivery ID and selected Driver ID.
-	return nil
-}
