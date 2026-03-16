@@ -15,6 +15,7 @@ import (
 	"github.com/luponetn/lorex/internal/delivery"
 	"github.com/luponetn/lorex/internal/location"
 	"github.com/luponetn/lorex/internal/logger"
+	"github.com/luponetn/lorex/internal/notifications"
 	"github.com/luponetn/lorex/internal/store"
 	"github.com/luponetn/lorex/internal/tasks"
 	"github.com/redis/go-redis/v9"
@@ -120,6 +121,12 @@ func main() {
 	// location
 	locationHandler := location.NewHandler(locStore)
 	location.RegisterRoutes(router, locationHandler)
+
+	// notifications
+	notificationStore := store.NewNotificationPostgresStore(q)
+	notificationService := notifications.NewSvc(notificationStore)
+	notificationHandler := notifications.NewHandler(notificationService)
+	notifications.RegisterRoutes(router, notificationHandler)
 
 	StartServer(router, app)
 }

@@ -114,7 +114,7 @@ func (p *RedisTaskProcessor) AssignDriver(ctx context.Context, deliveryID string
 		}
 		computedDriverScore = 1
 		if fetchedDriver.Rating > 4 {
-			computedDriverScore * 10
+			computedDriverScore *= 10
 		}
 		if fetchedDriver.TotalDeliveries > 10 {
 			computedDriverScore++
