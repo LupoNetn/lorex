@@ -123,6 +123,7 @@ func (p *RedisTaskProcessor) AssignDriver(ctx context.Context, deliveryID string
 			driverScore = computedDriverScore
 			assignedDriverID = driverUUID.String()
 		}
+		//fix
 	}
 	if assignedDriverID == "" {
 		slog.Warn("no drivers found for delivery", "delivery_id", deliveryID)
